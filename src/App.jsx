@@ -3,21 +3,57 @@ import { createTheme, ThemeProvider, Typography } from '@mui/material'
 import Container from '@mui/material/Container';
 import CloudIcon from '@mui/icons-material/Cloud';
 import Button from '@mui/material/Button';
-const theme = createTheme({
-  typography: {
-    fontFamily: 'Cairo',
-  },
-  palette: {
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#fff',
-    },
-  },
-})
-
+import axios from 'axios';
+import { useEffect, useState } from 'react';
 function App() {
+  const theme = createTheme({
+    typography: {
+      fontFamily: 'Cairo',
+    },
+    palette: {
+      primary: {
+        main: '#1976d2',
+      },
+      secondary: {
+        main: '#fff',
+      },
+    },
+  })
+
+  const toCelsius = (k) => (k - 273.15).toFixed(1);
+  
+  const [weatherData, setWeatherData] = useState(null);
+
+  useEffect(() => {
+    let cancelAxios; 
+
+    const fetchWeatherData = async () => {
+      try {
+        const response = await axios.get(
+          `https://api.openweathermap.org/data/2.5/weather?q=Qena&appid=${import.meta.env.VITE_WEATHER_API_KEY}`,
+          {
+            cancelToken: new axios.CancelToken((cancel) => {
+              cancelAxios = cancel;
+            }),
+          }
+        );
+        setWeatherData(response.data);
+      } catch (error) {
+        if (axios.isCancel(error)) {
+          console.log('Request canceled', error.message);
+        } else {
+          console.error('Error fetching weather data:', error);
+        }
+      } 
+    };
+
+    fetchWeatherData();
+
+    return () => {
+      if (cancelAxios) cancelAxios();
+    };
+  }, []);
+
   return (
     <div className='app'>
       <ThemeProvider theme={theme}>
@@ -27,7 +63,7 @@ function App() {
               <div>
                 <div style={{ display: 'flex', alignItems: 'end', justifyContent: 'start' }}>
                   <Typography variant="h2" gutterBottom style={{ fontWeight: 600 }}>
-                    مصر
+                    قنا 
                   </Typography>
                   <Typography variant="h5" gutterBottom style={{ marginRight: '1.2rem' }}>
                     الاثنين 10-10-2025
@@ -37,24 +73,44 @@ function App() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center',gap: '1rem' }}>
                   <div style={{display: 'flex',justifyContent: 'space-between',alignItems: 'center'}}>
                   <div>
-                    <div style={{ textAlign: 'right' }}>
-                      <Typography variant="h2" gutterBottom>
-                        25°
-                      </Typography>
+                      {!weatherData ? (
+                        <Typography variant="h2" style={{textAlign: 'center'}} gutterBottom>جاري التحميل...</Typography>
+                      ) : (
+                        <>
+                          <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            <Typography variant="h2" gutterBottom>
+                              {toCelsius(weatherData.main.temp)}°C
+                            </Typography>
+                            <img
+                              src={`https://openweathermap.org/img/wn/${weatherData.weather[0].icon}.png`}
+                              alt=""
+                              style={{ width: '5rem', height: '5rem' }}
+                            />
+                          </div>
+
+                          <Typography style={{ textAlign: 'center' }} variant="h6" gutterBottom>
+                            {weatherData.weather[0].description}
+                          </Typography>
+
+                          <div
+                            style={{
+                              textAlign: 'center',
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              gap: '1rem',
+                            }}
+                          >
+                            <Typography variant="h6" gutterBottom>
+                              صغري: {toCelsius(weatherData.main.temp_min)}
+                            </Typography>
+                            |
+                            <Typography variant="h6" gutterBottom>
+                              كبري: {toCelsius(weatherData.main.temp_max)}
+                            </Typography>
+                          </div>
+                        </>
+                      )}
                     </div>
-                    <Typography style={{ textAlign: 'center' }} variant="h6" gutterBottom>
-                      broken clouds
-                    </Typography>
-                    <div style={{ textAlign: 'center', display: 'flex', justifyContent: 'space-between',gap: '1rem' }}>
-                      <Typography variant="h6" gutterBottom>
-                        صغري: 25°
-                      </Typography>
-                      |
-                      <Typography variant="h6" gutterBottom>
-                        كبري: 25°
-                      </Typography>
-                    </div>
-                  </div>
                   </div>
                   <CloudIcon style={{fontSize: '12rem',color: 'white'}} />
                 </div>
