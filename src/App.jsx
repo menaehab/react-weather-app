@@ -6,6 +6,8 @@ import Button from '@mui/material/Button';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import moment from 'moment';
+import { useTranslation } from 'react-i18next';
+
 function App() {
   const theme = createTheme({
     typography: {
@@ -21,14 +23,40 @@ function App() {
     },
   })
 
+  // Set Arabic locale
+  moment.updateLocale('ar', {
+    months: 'يناير_فبراير_مارس_أبريل_مايو_يونيو_يوليو_أغسطس_سبتمبر_أكتوبر_نوفمبر_ديسمبر'.split('_'),
+    weekdays: 'الأحد_الإثنين_الثلاثاء_الأربعاء_الخميس_الجمعة_السبت'.split('_')
+  });
+
+  const { t, i18n } = useTranslation();
+  
+  const [language, setLanguage] = useState('ar');
+
+  useEffect(() => {
+    moment.locale(language);
+    i18n.changeLanguage(language);
+  }, []);
+
+
+  const handleLanguageChange = () => {
+    const newLang = language === 'ar' ? 'en' : 'ar';
+    setLanguage(newLang);
+    i18n.changeLanguage(newLang);
+    moment.locale(newLang);
+    setDate(moment().format('dddd، D MMMM YYYY')); 
+  }
+  
   const toCelsius = (k) => (k - 273.15).toFixed(1);
   
+  
   const [weatherData, setWeatherData] = useState(null);
-  const [date, setDate] = useState(moment().format("MMM Do YYYY"));
+  const [date, setDate] = useState(moment().format('dddd، D MMMM YYYY'));
 
   useEffect(() => {
     let cancelAxios; 
-    setDate(moment().format("MMM Do YYYY"));
+    // Update date with Arabic format
+    setDate(moment().format('dddd، D MMMM YYYY'));
 
     const fetchWeatherData = async () => {
       try {
@@ -60,15 +88,15 @@ function App() {
   return (
     <div className='app'>
       <ThemeProvider theme={theme}>
-        <Container maxWidth="sm" dir='rtl'>
+        <Container maxWidth="sm" dir={language === 'ar' ? 'rtl' : 'ltr'}>
           <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center',flexDirection: 'column',gap: '1rem' }}>
             <div style={{ width: '100%', backgroundColor: 'rgb(28 52 91 / 36%)', borderRadius: '1rem', padding: '1rem', color: 'white', boxShadow: '5px 11px 1px rgba(0, 0, 0, 0.5)' }}>
               <div>
-                <div style={{ display: 'flex', alignItems: 'end', justifyContent: 'start' }}>
+                <div style={{ display: 'flex', alignItems: 'end', justifyContent: 'start',gap: '1.2rem' }}>
                   <Typography variant="h2" gutterBottom style={{ fontWeight: 600 }}>
-                    قنا 
+                    {t('qena')}
                   </Typography>
-                  <Typography variant="h5" gutterBottom style={{ marginRight: '1.2rem' }}>
+                  <Typography variant="h5" gutterBottom >
                     {date}
                   </Typography>
                 </div>
@@ -77,7 +105,7 @@ function App() {
                   <div style={{display: 'flex',justifyContent: 'space-between',alignItems: 'center'}}>
                   <div>
                       {!weatherData ? (
-                        <Typography variant="h2" style={{textAlign: 'center'}} gutterBottom>جاري التحميل...</Typography>
+                        <Typography variant="h2" style={{textAlign: 'center'}} gutterBottom>{t('loading')}</Typography>
                       ) : (
                         <>
                           <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -104,11 +132,11 @@ function App() {
                             }}
                           >
                             <Typography variant="h6" gutterBottom>
-                              صغري: {toCelsius(weatherData.main.temp_min)}
+                              {t('min')}: {toCelsius(weatherData.main.temp_min)}
                             </Typography>
                             |
                             <Typography variant="h6" gutterBottom>
-                              كبري: {toCelsius(weatherData.main.temp_max)}
+                              {t('max')}: {toCelsius(weatherData.main.temp_max)}
                             </Typography>
                           </div>
                         </>
@@ -120,7 +148,7 @@ function App() {
               </div>
             </div>
             <div style={{display: 'flex',justifyContent: 'end',width: '100%'}}>
-              <Button variant='text' color='primary' style={{color: 'white'}}>إنجليزي</Button>
+              <Button variant='text' color='primary' style={{color: 'white'}} onClick={handleLanguageChange}>{language === 'ar' ? 'English' : 'العربية'}</Button>
             </div>
           </div>
         </Container>
