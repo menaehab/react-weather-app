@@ -5,6 +5,7 @@ import CloudIcon from '@mui/icons-material/Cloud';
 import Button from '@mui/material/Button';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
+import moment from 'moment';
 function App() {
   const theme = createTheme({
     typography: {
@@ -23,9 +24,11 @@ function App() {
   const toCelsius = (k) => (k - 273.15).toFixed(1);
   
   const [weatherData, setWeatherData] = useState(null);
+  const [date, setDate] = useState(moment().format("MMM Do YYYY"));
 
   useEffect(() => {
     let cancelAxios; 
+    setDate(moment().format("MMM Do YYYY"));
 
     const fetchWeatherData = async () => {
       try {
@@ -66,7 +69,7 @@ function App() {
                     قنا 
                   </Typography>
                   <Typography variant="h5" gutterBottom style={{ marginRight: '1.2rem' }}>
-                    الاثنين 10-10-2025
+                    {date}
                   </Typography>
                 </div>
                 <hr />
